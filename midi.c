@@ -90,9 +90,9 @@ void midi_init()
   midi->read_word = midi_read_word;
   midi->write_byte = midi_write_byte;
   midi->write_word = midi_write_word;
-  midi->state_collect = midi_state_collect;
-  midi->state_restore = midi_state_restore;
-  midi->diagnostics = midi_diagnostics;
+  midi->dev.state_collect = midi_state_collect;
+  midi->dev.state_restore = midi_state_restore;
+  midi->dev.diagnostics = midi_diagnostics;
 
   mmu_register(midi);
 }

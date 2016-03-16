@@ -107,9 +107,9 @@ void ram_init()
   ram->read_word = ram_read_word;
   ram->write_byte = ram_write_byte;
   ram->write_word = ram_write_word;
-  ram->state_collect = ram_state_collect;
-  ram->state_restore = ram_state_restore;
-  ram->diagnostics = ram_diagnostics;
+  ram->dev.state_collect = ram_state_collect;
+  ram->dev.state_restore = ram_state_restore;
+  ram->dev.diagnostics = ram_diagnostics;
 
   mmu_register(ram);
 
@@ -118,7 +118,7 @@ void ram_init()
   cfg->size = RAMCFGSIZE;
   cfg->read_byte = ramcfg_read_byte;
   cfg->write_byte = ramcfg_write_byte;
-  cfg->diagnostics = cfg_diagnostics;
+  cfg->dev.diagnostics = cfg_diagnostics;
 
   mmu_register(cfg);
 }

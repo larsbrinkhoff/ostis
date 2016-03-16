@@ -245,10 +245,10 @@ void psg_init()
   psg->read_word = psg_read_word;
   psg->write_byte = psg_write_byte;
   psg->write_word = psg_write_word;
-  psg->state_collect = psg_state_collect;
-  psg->state_restore = psg_state_restore;
-  psg->diagnostics = psg_diagnostics;
-  psg->interrupt = psg_do_interrupts;
+  psg->dev.state_collect = psg_state_collect;
+  psg->dev.state_restore = psg_state_restore;
+  psg->dev.diagnostics = psg_diagnostics;
+  psg->dev.interrupt = psg_do_interrupts;
 
   mmu_register(psg);
 

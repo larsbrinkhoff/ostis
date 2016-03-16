@@ -106,8 +106,8 @@ void print_diagnostic(int level, struct mmu *device, const char *format, ...)
     id = "";
     verbosity = LEVEL_WARN;
   } else {
-    id = device->id;
-    verbosity = device->verbosity;
+    id = device->dev.id;
+    verbosity = device->dev.verbosity;
   }
 
   /* MAXDIAG means we have no special setting for that module, so obey default
@@ -130,8 +130,8 @@ void print_diagnostic(int level, struct mmu *device, const char *format, ...)
   }
   fprintf(stderr, ": ");
   if(device)
-    fprintf(stderr, "%c%c%c%c: ", device->id[0], device->id[1],
-	    device->id[2], device->id[3]);
+    fprintf(stderr, "%c%c%c%c: ", device->dev.id[0], device->dev.id[1],
+	    device->dev.id[2], device->dev.id[3]);
   va_start(args, format);
   vfprintf(stderr, format, args);
   va_end(args);
@@ -144,5 +144,5 @@ void print_diagnostic(int level, struct mmu *device, const char *format, ...)
 
 void diagnostics_level(struct mmu *device, int n)
 {
-  device->diagnostics(device, n);
+  device->dev.diagnostics(device, n);
 }

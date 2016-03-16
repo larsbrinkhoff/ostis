@@ -257,10 +257,10 @@ void mfp_init()
   mfp->read_word = mfp_read_word;
   mfp->write_byte = mfp_write_byte;
   mfp->write_word = mfp_write_word;
-  mfp->state_collect = mfp_state_collect;
-  mfp->state_restore = mfp_state_restore;
-  mfp->diagnostics = mfp_diagnostics;
-  mfp->interrupt = mfp_do_interrupts;
+  mfp->dev.state_collect = mfp_state_collect;
+  mfp->dev.state_restore = mfp_state_restore;
+  mfp->dev.diagnostics = mfp_diagnostics;
+  mfp->dev.interrupt = mfp_do_interrupts;
 
   mmu_register(mfp);
 }

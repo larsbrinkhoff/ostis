@@ -215,9 +215,9 @@ void shifter_init()
   shifter->read_word = shifter_read_word;
   shifter->write_byte = shifter_write_byte;
   shifter->write_word = shifter_write_word;
-  shifter->state_collect = shifter_state_collect;
-  shifter->state_restore = shifter_state_restore;
-  shifter->diagnostics = shifter_diagnostics;
+  shifter->dev.state_collect = shifter_state_collect;
+  shifter->dev.state_restore = shifter_state_restore;
+  shifter->dev.diagnostics = shifter_diagnostics;
 
   shifter_set_resolution(0);
 

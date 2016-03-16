@@ -134,7 +134,7 @@ void acia_init()
   acia->read_word = acia_read_word;
   acia->write_byte = acia_write_byte;
   acia->write_word = acia_write_word;
-  acia->diagnostics = acia_diagnostics;
+  acia->dev.diagnostics = acia_diagnostics;
 
   mmu_register(acia);
   acia_reset();

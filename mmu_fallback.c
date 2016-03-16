@@ -48,9 +48,9 @@ static void mmu_fallback_register(char *name, LONG addr, int size)
   mmu_fallback->read_word = mmu_fallback_read_word;
   mmu_fallback->write_byte = mmu_fallback_write_byte;
   mmu_fallback->write_word = mmu_fallback_write_word;
-  mmu_fallback->state_collect = mmu_fallback_state_collect;
-  mmu_fallback->state_restore = mmu_fallback_state_restore;
-  mmu_fallback->diagnostics = mmu_fallback_diagnostics;
+  mmu_fallback->dev.state_collect = mmu_fallback_state_collect;
+  mmu_fallback->dev.state_restore = mmu_fallback_state_restore;
+  mmu_fallback->dev.diagnostics = mmu_fallback_diagnostics;
 
   mmu_register(mmu_fallback);
 }

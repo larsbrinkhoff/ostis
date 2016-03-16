@@ -3,6 +3,7 @@
 
 #include "common.h"
 #include "cpu.h"
+#include "dev.h"
 
 struct mmu_state {
   struct mmu_state *next;
@@ -12,20 +13,14 @@ struct mmu_state {
 };
 
 struct mmu {
+  struct device dev;
   struct mmu *next;
-  char id[4];
-  const char *name;
   LONG start;
   LONG size;
-  int verbosity;
   BYTE (*read_byte)(LONG);
   WORD (*read_word)(LONG);
   void (*write_byte)(LONG, BYTE);
   void (*write_word)(LONG, WORD);
-  int (*state_collect)(struct mmu_state *);
-  void (*state_restore)(struct mmu_state *);
-  void (*diagnostics)();
-  void (*interrupt)(struct cpu *);
 };
 
 struct mmu_module {

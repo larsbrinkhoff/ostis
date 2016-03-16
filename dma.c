@@ -215,9 +215,9 @@ void dma_init()
   dma->read_word = dma_read_word;
   dma->write_byte = dma_write_byte;
   dma->write_word = dma_write_word;
-  dma->state_collect = dma_state_collect;
-  dma->state_restore = dma_state_restore;
-  dma->diagnostics = dma_diagnostics;
+  dma->dev.state_collect = dma_state_collect;
+  dma->dev.state_restore = dma_state_restore;
+  dma->dev.diagnostics = dma_diagnostics;
 
   dma_reset(DMA_READ);
 

@@ -60,7 +60,7 @@ static struct mmu *mmu_device = NULL;				\
 static void device ## _diagnostics(struct mmu *device, int n)	\
 {								\
   mmu_device = device;						\
-  device->verbosity = n;					\
+  device->dev.verbosity = n;					\
 }
 
 #define HANDLE_DIAGNOSTICS_NON_MMU_DEVICE(device, device_id)    \
@@ -69,7 +69,7 @@ static void device ## _diagnostics(struct mmu *device, int n)	\
     extern int verbosity;                                       \
     struct mmu *dummy_device;                                   \
     dummy_device = (struct mmu *)malloc(sizeof(struct mmu));    \
-    dummy_device->diagnostics = device ## _diagnostics;         \
-    memcpy(dummy_device->id, device_id, 4);                     \
+    dummy_device->dev.diagnostics = device ## _diagnostics;     \
+    memcpy(dummy_device->dev.id, device_id, 4);                 \
     diagnostics_level(dummy_device, verbosity);                 \
   } while(0)

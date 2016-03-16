@@ -54,9 +54,9 @@ void cartridge_init(char *filename)
   cartridge->size = CARTRIDGESIZE;
   cartridge->read_byte = cartridge_read_byte;
   cartridge->read_word = cartridge_read_word;
-  cartridge->state_collect = cartridge_state_collect;
-  cartridge->state_restore = cartridge_state_restore;
-  cartridge->diagnostics = cartridge_diagnostics;
+  cartridge->dev.state_collect = cartridge_state_collect;
+  cartridge->dev.state_restore = cartridge_state_restore;
+  cartridge->dev.diagnostics = cartridge_diagnostics;
 
   mmu_register(cartridge);
 

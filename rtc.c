@@ -54,9 +54,9 @@ void rtc_init()
   rtc->read_word = rtc_read_word;
   rtc->write_byte = rtc_write_byte;
   rtc->write_word = rtc_write_word;
-  rtc->state_collect = rtc_state_collect;
-  rtc->state_restore = rtc_state_restore;
-  rtc->diagnostics = rtc_diagnostics;
+  rtc->dev.state_collect = rtc_state_collect;
+  rtc->dev.state_restore = rtc_state_restore;
+  rtc->dev.diagnostics = rtc_diagnostics;
 
   mmu_register(rtc);
 }

@@ -87,7 +87,7 @@ static struct mmu *find_module_by_id(char *id)
 
   for(i=0;i<mmu_module_count;i++) {
     module = mmu_module_by_id[i];
-    if(!strncmp(id, module->id, 4)) {
+    if(!strncmp(id, module->dev.id, 4)) {
       return module;
     }
   }
@@ -114,7 +114,7 @@ static void mmu_send_bus_error(int reading, LONG addr)
   }
   
   DEBUG("BUS ERROR at 0x%08x", addr);
-  if(mmu_device->verbosity > LEVEL_INFO)
+  if(mmu_device->dev.verbosity > LEVEL_INFO)
     cpu_print_status(CPU_USE_LAST_PC);
 
   cpu_set_bus_error(flags, addr);
@@ -139,7 +139,7 @@ static void mmu_send_address_error(int reading, LONG addr)
   }
   
   DEBUG("ADDRESS ERROR at 0x%08x", addr);
-  if(mmu_device->verbosity > LEVEL_INFO)
+  if(mmu_device->dev.verbosity > LEVEL_INFO)
     cpu_print_status(CPU_USE_LAST_PC);
   
   cpu_set_address_error(flags, addr);
@@ -195,7 +195,7 @@ static struct mmu *mmu_bus_error_module()
 static struct mmu *mmu_clone_module(struct mmu *module)
 {
   struct mmu *clone;
-  clone = mmu_create(module->id, module->name);
+  clone = mmu_create(module->dev.id, module->dev.name);
 
   clone->read_byte = module->read_byte;
   clone->read_word =  module->read_word;
@@ -434,11 +434,11 @@ struct mmu_state *mmu_state_collect()
 
   for(i=0; i<mmu_module_count; i++) {
     module = mmu_module_by_id[i];
-    if(module->state_collect != NULL) {
+    if(module->dev.state_collect != NULL) {
       new = xmalloc(sizeof(struct mmu_state));
       if(new != NULL) {
-	strncpy(new->id, module->id, 4);
-	if(module->state_collect(new) == STATE_VALID) {
+	strncpy(new->id, module->dev.id, 4);
+	if(module->dev.state_collect(new) == STATE_VALID) {
 	  new->next = top;
 	  top = new;
 	} else {
@@ -460,8 +460,8 @@ void mmu_state_restore(struct mmu_state *state)
   
   while(t) {
     module = find_module_by_id(t->id);
-    if(module != NULL && module->state_restore != NULL) {
-      module->state_restore(t);
+    if(module != NULL && module->dev.state_restore != NULL) {
+      module->dev.state_restore(t);
     }
     t = t->next;
   }
@@ -474,8 +474,8 @@ struct mmu * mmu_create(const char *id, const char *name)
     FATAL("Could not allocate device");
 
   memset(device, 0, sizeof(struct mmu));
-  memcpy(device->id, id, sizeof device->id);
-  device->name = name;
+  memcpy(device->dev.id, id, sizeof device->dev.id);
+  device->dev.name = name;
 
   return device;
 }
@@ -514,7 +514,7 @@ void mmu_print_map()
 
   for(i=0;i<mmu_module_count;i++) {
     module = mmu_module_by_id[i];
-    printf("Name : %s\n", module->name);
+    printf("Name : %s\n", module->dev.name);
     printf("Start: 0x%08x\n", module->start);
     printf("End  : 0x%08x\n", module->start+module->size-1);
     printf("Size : %d\n", module->size);
@@ -529,8 +529,8 @@ void mmu_do_interrupts(struct cpu *cpu)
 
   for(i=0;i<mmu_module_count;i++) {
     module = mmu_module_by_id[i];
-    if(module->interrupt)
-      module->interrupt(cpu);
+    if(module->dev.interrupt)
+      module->dev.interrupt(cpu);
   }
 
   fdc_do_interrupts(cpu);

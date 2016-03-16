@@ -108,9 +108,9 @@ void rom_init()
   rom->size = ROMSIZE;
   rom->read_byte = rom_read_byte;
   rom->read_word = rom_read_word;
-  rom->state_collect = rom_state_collect;
-  rom->state_restore = rom_state_restore;
-  rom->diagnostics = rom_diagnostics;
+  rom->dev.state_collect = rom_state_collect;
+  rom->dev.state_restore = rom_state_restore;
+  rom->dev.diagnostics = rom_diagnostics;
 
   mmu_register(rom);
 
@@ -131,9 +131,9 @@ void rom_init()
   rom2->size = ROMSIZE2;
   rom2->read_byte = rom_read_byte;
   rom2->read_word = rom_read_word;
-  rom2->state_collect = rom_state_collect;
-  rom2->state_restore = rom_state_restore;
-  rom2->diagnostics = rom_diagnostics;
+  rom2->dev.state_collect = rom_state_collect;
+  rom2->dev.state_restore = rom_state_restore;
+  rom2->dev.diagnostics = rom_diagnostics;
 
   mmu_register(rom2);
 }
