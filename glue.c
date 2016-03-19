@@ -120,7 +120,7 @@ static void mode_50(void)
   CASE(376, h = 0);
   CASE(400, if(v) mfp_do_timerb_event(cpu)); //Should be 376
   CASE(450, shifter_blank(1));
-  CASE(502,
+  CASE(502-40,
     switch(line) {
     CASE(  0, line_end = 313);
     CASE( 63, v = 1);
