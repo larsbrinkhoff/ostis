@@ -33,6 +33,7 @@ static char *rasterpos;
 static char *next_line;
 static char *rgbimage;
 static int screen_delay_value = 0;
+static int lines;
 
 static int ppm_fd;
 static int framecnt;
@@ -73,7 +74,7 @@ void screen_make_texture(const char *scale)
   texture = SDL_CreateTexture(renderer,
 			      pixelformat,
 			      SDL_TEXTUREACCESS_STREAMING,
-			      mon.columns, mon.lines);
+			      mon.columns, lines);
 }
 
 SDL_Texture *screen_generate_rasterpos_indicator(int color)
@@ -248,6 +249,10 @@ void screen_swap(int indicate_rasterpos)
   
   if(disable) return;
 
+  TRACE("lines = %d", lines);
+  screen_make_texture(SDL_SCALING_NEAREST);
+  SDL_SetWindowSize(window, mon.width, 2*lines);
+
     if(debugger) {
       display_swap_screen();
     }
@@ -360,12 +365,14 @@ void screen_vsync(void)
 
   rasterpos = rgbimage;
   next_line = rgbimage + screen->pitch;
+  lines = 0;
 }
 
 void screen_hsync(void)
 {
   rasterpos = next_line;
   next_line += screen->pitch;
+  lines++;
 }
 
 void screen_set_delay(int delay_value)
