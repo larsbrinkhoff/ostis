@@ -14,6 +14,7 @@
 #include "diag.h"
 
 struct monitor {
+  const char *name;
   int width, height, columns, lines;
   int crop_offset_x, crop_offset_y;
   int crop_width, crop_height;
@@ -41,8 +42,28 @@ static int usecs_per_framecnt_interval = 1;
 int64_t last_vsync_ticks = 0;
 
 struct monitor monitor[] = {
-  { 1024, 626, 1024, 313, 64, 33, 768, 560 },
-  { 896, 501, 896, 501, 0, 0, 896, 501 }
+  {
+    .name = "Colour Monitor",
+    .width = 1024,
+    .height = 626,
+    .columns = 1024,
+    .lines = 313,
+    .crop_offset_x = 64,
+    .crop_offset_y = 33,
+    .crop_width = 768,
+    .crop_height = 560
+  },
+  {
+    .name = "Monochrome Monitor",
+    .width = 896,
+    .height = 501,
+    .columns = 896,
+    .lines = 501,
+    .crop_offset_x = 0,
+    .crop_offset_y = 0,
+    .crop_width = 896,
+    .crop_height = 501
+  }
 };
 
 int monitors = 0;
@@ -152,7 +173,7 @@ void screen_init()
     mon[0].height = mon[0].crop_height;
   }
   
-    window = SDL_CreateWindow("Main screen",
+    window = SDL_CreateWindow(mon[0].name,
 			      SDL_WINDOWPOS_UNDEFINED,
 			      SDL_WINDOWPOS_UNDEFINED,
 			      mon[0].width,
