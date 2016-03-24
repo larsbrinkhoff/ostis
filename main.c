@@ -38,6 +38,7 @@ int psgoutput = 0;
 int play_audio = 0;
 int audio_device = 0;
 int monitor_sm124 = 0;
+int monitor_sc1224 = 0;
 int crop_screen = 0;
 int verbosity = 3;
 int clocked_cpu = 0;
@@ -84,7 +85,7 @@ int main(int argc, char *argv[])
 #endif
       {0,                       0,                 0, 0 }
     };
-    c = getopt_long(argc, argv, "a:b:c:t:s:hdpyVAMvqK", long_options, &option_index);
+    c = getopt_long(argc, argv, "a:b:c:t:s:hdpyVACMvqK", long_options, &option_index);
     if(c == -1) break;
 
     switch(c) {
@@ -155,14 +156,20 @@ int main(int argc, char *argv[])
     case 'M':
       monitor_sm124 = 1;
       break;
+    case 'C':
+      monitor_sc1224 = 1;
+      break;
     case 'h':
     default:
-      printf("Usage: %s [-AdMpqvVy] [-a diskimage1] [-b diskimage2] [-c hdimage] [-t tosimage] [-s stateimage]\n",
+      printf("Usage: %s [-ACdMpqvVy] [-a diskimage1] [-b diskimage2] [-c hdimage] [-t tosimage] [-s stateimage]\n",
 	     argv[0]);
       exit(-1);
       break;
     }
   }
+
+  if(!monitor_sm124 && !monitor_sc1224)
+    monitor_sc1224 = 1;
 
   /* Do not crop screen while debugging */
   if(debugger) {
