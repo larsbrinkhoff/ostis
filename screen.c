@@ -18,21 +18,19 @@ struct monitor {
   int width, height, columns, lines;
   int crop_offset_x, crop_offset_y;
   int crop_width, crop_height;
+  SDL_Surface *screen;
+  SDL_Texture *texture;
+  SDL_Window *window;
+  SDL_Renderer *renderer;
+  char *rgbimage, *rasterpos, *next_line;
 };
 
 static int disable = 0;
-static SDL_Surface *screen;
-static SDL_Texture *texture = NULL;
-static SDL_Window *window;
-static SDL_Renderer *renderer;
 int screen_window_id;
 static SDL_Texture *rasterpos_indicator[2];
 static int rasterpos_indicator_cnt = 0;
 static int screen_grabbed = 0;
 static int screen_fullscreen = 0;
-static char *rasterpos;
-static char *next_line;
-static char *rgbimage;
 static int screen_delay_value = 0;
 
 static int ppm_fd;
@@ -51,7 +49,8 @@ struct monitor monitor[] = {
     .crop_offset_x = 64,
     .crop_offset_y = 33,
     .crop_width = 768,
-    .crop_height = 560
+    .crop_height = 560,
+    .texture = NULL
   },
   {
     .name = "Monochrome Monitor",
@@ -62,23 +61,20 @@ struct monitor monitor[] = {
     .crop_offset_x = 0,
     .crop_offset_y = 0,
     .crop_width = 896,
-    .crop_height = 501
+    .crop_height = 501,
+    .texture = NULL
   }
 };
 
 int monitors = 0;
 struct monitor mon[2];
 
-#define PADDR(x, y) (screen->pixels + \
-                         ((y) + BORDER_SIZE) * screen->pitch + \
-                         ((x) + BORDER_SIZE) * screen->format->BytesPerPixel)
-
 HANDLE_DIAGNOSTICS(screen)
 
 void screen_make_texture(const char *scale)
 {
   static const char *old_scale = "";
-  int pixelformat = SDL_PIXELFORMAT_RGB24;
+  int i;
 
   if(monitors == 0) {
     if(monitor_sc1224)
@@ -90,14 +86,16 @@ void screen_make_texture(const char *scale)
   if(strcmp(scale, old_scale) == 0)
     return;
 
-  if(texture != NULL)
-    SDL_DestroyTexture(texture);
+  for(i = 0; i < monitors; i++) {
+    if(mon[i].texture != NULL)
+      SDL_DestroyTexture(mon[i].texture);
 
-  SDL_SetHint(SDL_HINT_RENDER_SCALE_QUALITY, scale);
-  texture = SDL_CreateTexture(renderer,
-			      pixelformat,
-			      SDL_TEXTUREACCESS_STREAMING,
-			      mon[0].columns, mon[0].lines);
+    SDL_SetHint(SDL_HINT_RENDER_SCALE_QUALITY, scale);
+    mon[i].texture = SDL_CreateTexture(mon[i].renderer,
+				       SDL_PIXELFORMAT_RGB24,
+				       SDL_TEXTUREACCESS_STREAMING,
+				       mon[i].columns, mon[i].lines);
+  }
 }
 
 SDL_Texture *screen_generate_rasterpos_indicator(int color)
@@ -130,7 +128,7 @@ SDL_Texture *screen_generate_rasterpos_indicator(int color)
     p[i*rscreen->format->BytesPerPixel+2] = color&0xff;
   }
 
-  rtext = SDL_CreateTexture(renderer, SDL_PIXELFORMAT_BGR24,
+  rtext = SDL_CreateTexture(mon[0].renderer, SDL_PIXELFORMAT_BGR24,
                             SDL_TEXTUREACCESS_STREAMING,
                             4, 1);
   
@@ -144,6 +142,7 @@ void screen_init()
   /* should be rewritten with proper error checking */
   Uint32 rmask, gmask, bmask, amask;
   SDL_Surface *icon;
+  int i;
   
   HANDLE_DIAGNOSTICS_NON_MMU_DEVICE(screen, "SCRN");
 
@@ -168,40 +167,42 @@ void screen_init()
       mon[monitors++] = monitor[1];
   }
 
-  if (crop_screen) {
-    mon[0].width = mon[0].crop_width;
-    mon[0].height = mon[0].crop_height;
-  }
+  for(i = 0; i < monitors; i++) {
+    if (crop_screen) {
+      mon[i].width = mon[i].crop_width;
+      mon[i].height = mon[i].crop_height;
+    }
   
-    window = SDL_CreateWindow(mon[0].name,
-			      SDL_WINDOWPOS_UNDEFINED,
-			      SDL_WINDOWPOS_UNDEFINED,
-			      mon[0].width,
-			      mon[0].height,
-			      SDL_WINDOW_SHOWN | SDL_WINDOW_RESIZABLE);
+    mon[i].window = SDL_CreateWindow(mon[i].name,
+				     SDL_WINDOWPOS_UNDEFINED,
+				     SDL_WINDOWPOS_UNDEFINED,
+				     mon[i].width,
+				     mon[i].height,
+				     SDL_WINDOW_SHOWN | SDL_WINDOW_RESIZABLE);
     // NOTE: We always allocate memory for 501 lines, in case someone
     // decides to use a colour monitor, but switch to high resolution
     // near the end of the screen.  In that case, we'd try to output
     // 501 lines and overflow the buffer.
-    screen = SDL_CreateRGBSurface(0, mon[0].columns, 501,
-				  24, rmask, gmask, bmask, amask);
-    renderer = SDL_CreateRenderer(window, -1, 0);
-    screen_window_id = SDL_GetWindowID(window);
+    mon[i].screen = SDL_CreateRGBSurface(0, mon[i].columns, 501,
+					 24, rmask, gmask, bmask, amask);
+    mon[i].renderer = SDL_CreateRenderer(mon[0].window, -1, 0);
+    screen_window_id = SDL_GetWindowID(mon[i].window);
     DEBUG("screen_window_id == %d", screen_window_id);
     screen_make_texture(SDL_SCALING_NEAREST);
 
-  if(screen == NULL) {
-    FATAL("Did not get a video mode");
-  }
+    if(mon[i].screen == NULL) {
+      FATAL("Did not get a video mode");
+    }
 
-  icon = IMG_Load("logo-main.png");
-  SDL_SetWindowIcon(window, icon);
+    icon = IMG_Load("logo-main.png");
+    SDL_SetWindowIcon(mon[i].window, icon);
+  }
   
   if(ppmoutput) {
     ppm_fd = open("ostis.ppm", O_WRONLY|O_CREAT|O_TRUNC, 0644);
   }
 
-  rgbimage = screen->pixels;
+  mon[0].rgbimage = mon[0].screen->pixels;
   rasterpos_indicator[0] = screen_generate_rasterpos_indicator(0xffffff);
   rasterpos_indicator[1] = screen_generate_rasterpos_indicator(0xff0000);
 
@@ -241,9 +242,9 @@ static void screen_build_ppm()
 
   for(y=0;y<288;y++) {
     for(x=0;x<384;x++) {
-      frame[c*3+0] = rgbimage[((y+12)*512+x+32)*6+2];
-      frame[c*3+1] = rgbimage[((y+12)*512+x+32)*6+1];
-      frame[c*3+2] = rgbimage[((y+12)*512+x+32)*6+0];
+      frame[c*3+0] = mon[0].rgbimage[((y+12)*512+x+32)*6+2];
+      frame[c*3+1] = mon[0].rgbimage[((y+12)*512+x+32)*6+1];
+      frame[c*3+2] = mon[0].rgbimage[((y+12)*512+x+32)*6+0];
       c++;
     }
   }
@@ -265,7 +266,7 @@ void screen_clear()
 
 int screen_get_vsync()
 {
-  return (rasterpos - rgbimage) / 6;
+  return (mon[0].rasterpos - mon[0].rgbimage) / 6;
 }
 
 void screen_swap(int indicate_rasterpos)
@@ -277,15 +278,16 @@ void screen_swap(int indicate_rasterpos)
     if(debugger) {
       display_swap_screen();
     }
-    SDL_UpdateTexture(texture, NULL, screen->pixels, screen->pitch);
+    SDL_UpdateTexture(mon[0].texture, NULL, mon[0].screen->pixels,
+		      mon[0].screen->pitch);
     if(crop_screen) {
       src.x = mon[0].crop_offset_x;
       src.y = mon[0].crop_offset_y;
       src.w = mon[0].crop_width;
       src.h = mon[0].crop_height;
-      SDL_RenderCopy(renderer, texture, &src, NULL);
+      SDL_RenderCopy(mon[0].renderer, mon[0].texture, &src, NULL);
     } else {
-      SDL_RenderCopy(renderer, texture, NULL, NULL);
+      SDL_RenderCopy(mon[0].renderer, mon[0].texture, NULL, NULL);
     }
     if(indicate_rasterpos) {
       int rasterpos = screen_get_vsync();
@@ -293,10 +295,10 @@ void screen_swap(int indicate_rasterpos)
       dst.y = 2*(rasterpos/512);
       dst.w = 8;
       dst.h = 2;
-      SDL_RenderCopy(renderer, rasterpos_indicator[rasterpos_indicator_cnt&1], NULL, &dst);
+      SDL_RenderCopy(mon[0].renderer, rasterpos_indicator[rasterpos_indicator_cnt&1], NULL, &dst);
       rasterpos_indicator_cnt++;
     }
-    SDL_RenderPresent(renderer);
+    SDL_RenderPresent(mon[0].renderer);
 }
 
 void screen_disable(int yes)
@@ -318,13 +320,13 @@ static void set_screen_grabbed(int grabbed)
   int w, h;
 
   if(grabbed) {
-    SDL_SetWindowGrab(window, SDL_TRUE);
-    SDL_GetWindowSize(window, &w, &h);
-    SDL_WarpMouseInWindow(window, w/2, h/2);
+    SDL_SetWindowGrab(mon[0].window, SDL_TRUE);
+    SDL_GetWindowSize(mon[0].window, &w, &h);
+    SDL_WarpMouseInWindow(mon[0].window, w/2, h/2);
     SDL_ShowCursor(0);
     screen_grabbed = 1;
   } else {
-    SDL_SetWindowGrab(window, SDL_FALSE);
+    SDL_SetWindowGrab(mon[0].window, SDL_FALSE);
     SDL_ShowCursor(1);
     screen_grabbed = 0;
   }
@@ -338,15 +340,16 @@ void screen_toggle_grab()
 void screen_toggle_fullscreen()
 {
   screen_fullscreen = !screen_fullscreen;
-  SDL_SetWindowFullscreen(window, screen_fullscreen ? SDL_WINDOW_FULLSCREEN_DESKTOP : 0);
+  SDL_SetWindowFullscreen(mon[0].window,
+			  screen_fullscreen ? SDL_WINDOW_FULLSCREEN_DESKTOP : 0);
   set_screen_grabbed(screen_fullscreen);
 }
 
 void screen_draw(int r, int g, int b)
 {
-  *rasterpos++ = r;
-  *rasterpos++ = g;
-  *rasterpos++ = b;
+  *mon[0].rasterpos++ = r;
+  *mon[0].rasterpos++ = g;
+  *mon[0].rasterpos++ = b;
 }
 
 static int64_t usec_count() {
@@ -384,14 +387,14 @@ void screen_vsync(void)
     last_framecnt_usec = current_ticks;
   }
 
-  rasterpos = rgbimage;
-  next_line = rgbimage + screen->pitch;
+  mon[0].rasterpos = mon[0].rgbimage;
+  mon[0].next_line = mon[0].rgbimage + mon[0].screen->pitch;
 }
 
 void screen_hsync(void)
 {
-  rasterpos = next_line;
-  next_line += screen->pitch;
+  mon[0].rasterpos = mon[0].next_line;
+  mon[0].next_line += mon[0].screen->pitch;
 }
 
 void screen_set_delay(int delay_value)
