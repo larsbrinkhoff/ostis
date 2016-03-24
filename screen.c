@@ -40,12 +40,13 @@ static int64_t last_framecnt_usec;
 static int usecs_per_framecnt_interval = 1;
 int64_t last_vsync_ticks = 0;
 
-struct monitor monitors[] = {
+struct monitor monitor[] = {
   { 1024, 626, 1024, 313, 64, 33, 768, 560 },
   { 896, 501, 896, 501, 0, 0, 896, 501 }
 };
 
-struct monitor mon;
+int monitors = 0;
+struct monitor mon[2];
 
 #define PADDR(x, y) (screen->pixels + \
                          ((y) + BORDER_SIZE) * screen->pitch + \
@@ -58,10 +59,12 @@ void screen_make_texture(const char *scale)
   static const char *old_scale = "";
   int pixelformat = SDL_PIXELFORMAT_RGB24;
 
-  if (monitor_sm124)
-    mon = monitors[1];
-  else
-    mon = monitors[0];
+  if(monitors == 0) {
+    if(monitor_sc1224)
+      mon[monitors++] = monitor[0];
+    if(monitor_sm124)
+      mon[monitors++] = monitor[1];
+  }
 
   if(strcmp(scale, old_scale) == 0)
     return;
@@ -73,7 +76,7 @@ void screen_make_texture(const char *scale)
   texture = SDL_CreateTexture(renderer,
 			      pixelformat,
 			      SDL_TEXTUREACCESS_STREAMING,
-			      mon.columns, mon.lines);
+			      mon[0].columns, mon[0].lines);
 }
 
 SDL_Texture *screen_generate_rasterpos_indicator(int color)
@@ -137,27 +140,29 @@ void screen_init()
   bmask = 0x00ff0000;
 #endif
 
-  if (monitor_sm124)
-    mon = monitors[1];
-  else
-    mon = monitors[0];
+  if(monitors == 0) {
+    if(monitor_sc1224)
+      mon[monitors++] = monitor[0];
+    if(monitor_sm124)
+      mon[monitors++] = monitor[1];
+  }
 
   if (crop_screen) {
-    mon.width = mon.crop_width;
-    mon.height = mon.crop_height;
+    mon[0].width = mon[0].crop_width;
+    mon[0].height = mon[0].crop_height;
   }
   
     window = SDL_CreateWindow("Main screen",
 			      SDL_WINDOWPOS_UNDEFINED,
 			      SDL_WINDOWPOS_UNDEFINED,
-			      mon.width,
-			      mon.height,
+			      mon[0].width,
+			      mon[0].height,
 			      SDL_WINDOW_SHOWN | SDL_WINDOW_RESIZABLE);
     // NOTE: We always allocate memory for 501 lines, in case someone
     // decides to use a colour monitor, but switch to high resolution
     // near the end of the screen.  In that case, we'd try to output
     // 501 lines and overflow the buffer.
-    screen = SDL_CreateRGBSurface(0, mon.columns, 501,
+    screen = SDL_CreateRGBSurface(0, mon[0].columns, 501,
 				  24, rmask, gmask, bmask, amask);
     renderer = SDL_CreateRenderer(window, -1, 0);
     screen_window_id = SDL_GetWindowID(window);
@@ -253,10 +258,10 @@ void screen_swap(int indicate_rasterpos)
     }
     SDL_UpdateTexture(texture, NULL, screen->pixels, screen->pitch);
     if(crop_screen) {
-      src.x = mon.crop_offset_x;
-      src.y = mon.crop_offset_y;
-      src.w = mon.crop_width;
-      src.h = mon.crop_height;
+      src.x = mon[0].crop_offset_x;
+      src.y = mon[0].crop_offset_y;
+      src.w = mon[0].crop_width;
+      src.h = mon[0].crop_height;
       SDL_RenderCopy(renderer, texture, &src, NULL);
     } else {
       SDL_RenderCopy(renderer, texture, NULL, NULL);

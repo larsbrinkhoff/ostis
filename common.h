@@ -45,6 +45,7 @@ extern int psgoutput;
 extern int play_audio;
 extern int audio_device;
 extern int monitor_sm124;
+extern int monitor_sc1224;
 extern int crop_screen;
 #if TEST_BUILD
 extern char *testcase_name;
