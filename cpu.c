@@ -226,6 +226,12 @@ int cpu_step_instr(int trace)
       TRACE("%06X %s %s", cpu->pc, cprint->instr, cprint->data);
       free(cprint);
     }
+    if(mmu_device->verbosity >= LEVEL_TRACE) {
+      struct cprint *cprint;
+      cprint = cprint_instr(cpu->pc);
+      TRACE("%06X %s %s", cpu->pc, cprint->instr, cprint->data);
+      free(cprint);
+    }
 
     op = fetch_instr(cpu);
 
@@ -1107,6 +1113,12 @@ static int cpu_new_instr(int cpu_run_state)
 
   cpu->start_cycle = cpu->cycle;
   cpu->instr_state = INSTR_STATE_NONE;
+  if(mmu_device->verbosity >= LEVEL_TRACE) {
+    struct cprint *cprint;
+    cprint = cprint_instr(cpu->pc);
+    TRACE("%06X %s %s", cpu->pc, cprint->instr, cprint->data);
+    free(cprint);
+  }
   if(mmu_device->verbosity >= LEVEL_TRACE) {
     struct cprint *cprint;
     cprint = cprint_instr(cpu->pc);
