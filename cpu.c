@@ -357,10 +357,12 @@ void cpu_do_cycle(LONG cnt)
 {
   int i;
 
+#if 0
   if(cnt&3) {
     CLOCK("Wait states: %d", 4-(cnt&3));
     cnt = (cnt&0xfffffffc)+4;
   }
+#endif
   // All intermediate operations inside an instruction take an even
   // amount of cycles.
   ASSERT((cnt & 1) == 0);
