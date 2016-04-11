@@ -97,9 +97,6 @@ void ram_init()
   struct mmu *ram,*cfg;
 
   memory = xmalloc(sizeof(BYTE) * RAMSIZE);
-  if(!memory) {
-    return;
-  }
   ram = mmu_create("RAM0", "RAM");
   ram->start = RAMBASE;
   ram->size = RAMSIZE;
