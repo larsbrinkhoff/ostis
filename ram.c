@@ -31,7 +31,9 @@ static BYTE ram_read_byte(LONG addr)
 
 WORD ram_read_word(LONG addr)
 {
-  return (ram_read_byte(addr)<<8)|ram_read_byte(addr+1);
+  if(addr > RAM_PHYSMAX) return 0;
+  MMU_WAIT_STATES();
+  return (*real(addr) << 8) + *real(addr+1);
 }
 
 WORD ram_read_word_shifter(LONG addr)
@@ -48,8 +50,9 @@ static void ram_write_byte(LONG addr, BYTE data)
 
 static void ram_write_word(LONG addr, WORD data)
 {
-  ram_write_byte(addr, (data&0xff00)>>8);
-  ram_write_byte(addr+1, (data&0xff));
+  MMU_WAIT_STATES();
+  *(real(addr)) = data >> 8;
+  *(real(addr+1)) = data;
 }
 
 static int ram_state_collect(struct mmu_state *state)
