@@ -1,0 +1,203 @@
+MENU
+
+	TRACE [$0093ea]: GLUE: Vsync
+	TRACE [$00939e]: GLUE: S0 @ 263;440
+	TRACE [$0093ae]: GLUE: S2 @ 264;020
+
+	$120 vector:
+
+	movem.l d0/a0,-(a7)
+	clr.b $fffa1b
+	movea.l #$fffa21,a0
+	move.b #ff,(a0)
+	move.b #8,$fffa1b
+	move.b (a0),d0
+L1:	cmp.b (a0),d0
+	beq L1
+	clr.b $ff820a
+	moveq #3,d0
+L2:	nop
+	dbra d0,L2
+	move.b #2,#ff820a
+	bclr.b #0,$fffa0f
+	moveml (a7)+,d0/a0
+	rte
+
+----------------------------------------------------------------------
+
+F1
+
+	TRACE [$01459e]: GLUE: S0 @ 263;428
+	TRACE [$0145ae]: GLUE: S2 @ 264;008
+	TRACE [$0145b6]: GLUE: R0 @ 264;028
+	TRACE [$0144ec]: GLUE: R1 @ 312;472
+
+	$120 vector:
+
+	movem.l d1/a1,-(a7)
+	clr.b $fffa1b
+	movea.l #$fffa21,a1
+	move.b #200,(a1)
+	move.b #8,$fffa1b
+	move.b (a1),d1
+L1:	cmp.b (a1),d1
+	beq L1
+	clr.b $ff820a		<----
+	moveq #3,d0
+L2:	nop
+	dbra d1,L2
+	move.b #2,#ff820a	<----
+	move.b #0,#ff8260	<----
+	movea.l #$1588a,a1
+	move.l (a1)+,$ff8242
+	move.w (a1),$ff8246
+	moveml (a7)+,d1/a1
+	bclr.b #0,$fffa0f
+	rte
+
+	$70 vector:
+
+	movem.l d0-d7/a0-a6,-(a7)
+	addi.l #1,$90e8
+	move.b #1,#ff8260	<----
+	clr.b $fffa1b
+	move.b #199,$fffa21
+	move.b #8,$fffa1b
+	movea.l #$16b60,a0
+	move.l (a0)+,$ff8242
+	movea.l $14570,a0
+	move.w -(a0),$ff8246
+	addq.w #1,$1456e
+	cmpi.w #10,$1456e
+	...
+
+----------------------------------------------------------------------
+
+F3
+
+	TRACE [$0094d6]: GLUE: S0 @ 263;012
+	TRACE [$00e02c]: GLUE: Vsync
+	TRACE [$0094d6]: GLUE: S0 @ 184;024
+	TRACE [$009500]: GLUE: S2 @ 184;460
+	TRACE [$00932e]: GLUE: Vsync
+	TRACE [$009342]: GLUE: Vsync
+	TRACE [$0094d6]: GLUE: S0 @ 263;020
+	TRACE [$00e02c]: GLUE: Vsync
+	TRACE [$0094d6]: GLUE: S0 @ 184;020
+	TRACE [$009500]: GLUE: S2 @ 184;468
+
+	$70 vector:
+
+93ee	clr.b $fffa1b		; Timer B: Stop
+	move.b #1,$fffa21	; Timer B Data
+	move.b #8,$fffa1b	; Timer B: Event count mode
+	move.l #$9416,$120
+	st $1752a
+	rte
+
+	$120 vector:
+
+9416	move.b #96,$fffa21	; 97
+	move.l #$9432,$120
+	bclr.b #0,$fffa0f
+	rte
+
+9432	move.b #10,$fffa21	; 107
+	move.l #$944e,$120
+	bclr.b #0,$fffa0a
+	rte
+
+944e	move.l d0,-(a7)
+	move.w (a6)+,d0
+	cmp.w #-1,d0
+	bne L1
+	move.l (a7)+,d0
+	move.w (a6)+,$ff8242
+	clr.b $fffa1b
+	move.b #1,$fffa21
+	move.b #8,$fffa1b
+	move.l #$949e,$120
+	bclr.b #0,$fffa0f
+	rte
+L1	move.w d0,$ff8242
+	move.l (a7)+,d0
+	bclr.b #0,$fffa0f
+	ret
+
+949e	nop x 24
+	bclr.b #1,$ff820a	<----
+	move.l #$94ea,$120
+	bclr.b #0,$fffa0f
+	rte
+
+94ea	nop
+	nop
+	nop
+	nop
+	nop
+	nop
+	nop
+	bset.b #1,$ff820a	<----
+	move.l #$9514,$120
+	bclr.b #0,$fffa0f
+	rte
+
+9514	movem.l ...
+	...
+	move.l #$9416,$120
+	bclr.b #0,$fffa0f
+	rte
+
+----------------------------------------------------------------------
+
+F6
+
+TRACE [$00e8bc]: GLUE: Vsync
+TRACE [$00e336]: GLUE: S0 @ 263;408
+TRACE [$00e344]: GLUE: S2 @ 263;496
+TRACE [$00e8bc]: GLUE: Vsync
+TRACE [$00e336]: GLUE: S0 @ 263;400
+TRACE [$00e344]: GLUE: S2 @ 263;488
+
+	$70 vector
+
+9482	jsr ...
+	movem ...
+	lea ...
+	clr.b $fffa1b.w
+	move.b #150,$ffa21.w
+	move.b #8,$ffa1b.w
+	lea $ff8242,a0
+	lea ...
+	move ...	
+
+	$120 vector
+
+e1d8	clr.b $fffa1b.w
+	move.b #49,$fffa21.w
+	move.b #8,$fffa1b.w
+	...
+	move.l #$e212,$120
+	bclr.b #0,$ffa0f.w
+	rte
+
+e212	movem d0/a0,-(a7)
+	move.w #4,d0
+L1	dbra d0,L1
+	moveq #0,d0
+	lea L2,a0
+	move.b $ff8209,d0
+	adda.l d0,a0
+	jmp (a0)
+L2	nop
+	...
+	clr.b $ff820a.w		<----
+	moveq #3,d0
+L3	nop
+	dbra d0,L3
+	move.b #2,$ff820a.w	<----
+	move.l #$e1d8,$120.w
+	clr.b $fffa1b.w
+	bclr.b #0,$fffa0f.w
+	movem.l (a7)+,d0/a0
+	rte
