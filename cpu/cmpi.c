@@ -9,8 +9,8 @@ static void cmpi_b(struct cpu *cpu, int mode)
   BYTE i,e,r;
 
   ADD_CYCLE(8);
-  i = bus_read_word(cpu->pc)&0xff;
-  cpu->pc += 2;
+  cpu_prefetch();
+  i = fetch_instr(cpu)&0xff;
   e = ea_read_byte(cpu, mode, 0);
 
   r = e-i;
@@ -22,8 +22,8 @@ static void cmpi_w(struct cpu *cpu, int mode)
   WORD i,e,r;
 
   ADD_CYCLE(8);
-  i = bus_read_word(cpu->pc);
-  cpu->pc += 2;
+  cpu_prefetch();
+  i = fetch_instr(cpu);
   e = ea_read_word(cpu, mode, 0);
 
   r = e-i;
@@ -37,8 +37,12 @@ static void cmpi_l(struct cpu *cpu, int mode)
   if(!(mode&0x38)) {
       ADD_CYCLE(14);
   }
-  i = bus_read_long(cpu->pc);
-  cpu->pc += 4;
+  cpu_prefetch();
+  i = (fetch_instr(cpu) << 16);
+  fprintf(stderr, "i = %08x\n", i);
+  cpu_prefetch();
+  i += fetch_instr(cpu);
+  fprintf(stderr, "i = %08x\n", i);
   e = ea_read_long(cpu, mode, 0);
   
   r = e-i;

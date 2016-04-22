@@ -13,12 +13,13 @@ void bcc(struct cpu *cpu, WORD op)
   w = 0;
   o = (SLONG)(SBYTE)(op&0xff);
   if(!o) {
-    o = bus_read_word(cpu->pc);
+    o = fetch_instr(cpu);
     if(o&0x8000) o |= 0xffff0000;
-    o -= 2;
-    cpu->pc += 2;
+    o += 2;
     w = 1;
   }
+  o -= 4;
+  cpu_clear_prefetch();
   switch((op&0xf00)>>8) {
   case 0: /* BRA */
     ADD_CYCLE(10);
@@ -157,6 +158,8 @@ void bcc(struct cpu *cpu, WORD op)
     }
     break;
   }
+  fprintf(stderr, "pc = %06x\n", cpu->pc);
+  cpu_prefetch();
   cpu_prefetch();
 }
 

@@ -78,13 +78,34 @@ static void illegal_instr(struct cpu *cpu, WORD op)
   cpu_set_exception(4);
 }
 
+static void print_prefetch_queue(void)
+{
+  switch(cpu->has_prefetched) {
+  case 0:
+    CLOCK("Prefetch queue: empty");
+    break;
+  case 1:
+    CLOCK("Prefetch queue: %04x", cpu->prefetched_instr2);
+    break;
+  case 2:
+    CLOCK("Prefetch queue: %04x %04x", cpu->prefetched_instr,
+	  cpu->prefetched_instr2);
+    break;
+  }
+}
+
 WORD fetch_instr(struct cpu *cpu)
 {
+  WORD data;
   last_pc = cpu->pc;
-  ASSERT(cpu->has_prefetched == 1);
-  cpu->has_prefetched = 0;
+  ASSERT(cpu->has_prefetched > 0 && cpu->has_prefetched <= 2);
+  cpu->has_prefetched--;
   cpu->pc += 2;
-  return cpu->prefetched_instr;
+  data = cpu->prefetched_instr;
+  fprintf(stderr, "data = %04x\n", data);
+  cpu->prefetched_instr = cpu->prefetched_instr2;
+  print_prefetch_queue();
+  return data;
 }
 
 static void cpu_exception_reset_sr()
@@ -194,6 +215,7 @@ static void cpu_do_reset(void)
   cpu->ipl2 = 0;
 
   cpu_prefetch();
+  cpu_prefetch();
 
   for(i=0;i<256;i++) {
     exception_pending[i] = 0;
@@ -245,6 +267,7 @@ int cpu_step_instr(int trace)
     cpu_clear_prefetch();
     instr[0x4e71](cpu, 0x4e71); /* Run NOP until STOP is cancelled */
   }
+  ASSERT(cpu->has_prefetched == 2);
   CLOCK("Instruction took %d cycles", cpu->icycle);
   cpu_do_cycle(cpu->icycle);
   cpu_check_for_pending_interrupts();
@@ -463,10 +486,12 @@ void cpu_set_sr(WORD sr)
 
 void cpu_prefetch()
 {
-  CLOCK("Prefetch");
-  ASSERT(cpu->has_prefetched == 0);
-  cpu->prefetched_instr = bus_read_word(cpu->pc);
-  cpu->has_prefetched = 1;
+  CLOCK("Prefetch %d", cpu->has_prefetched);
+  ASSERT(cpu->has_prefetched < 2);
+  cpu->prefetched_instr = cpu->prefetched_instr2;
+  cpu->prefetched_instr2 = bus_read_word(cpu->pc + 2 * cpu->has_prefetched);
+  cpu->has_prefetched++;
+  print_prefetch_queue();
 }
 
 void cpu_clear_prefetch()

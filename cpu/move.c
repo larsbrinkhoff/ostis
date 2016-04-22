@@ -56,6 +56,8 @@ static void move(struct cpu *cpu, WORD op)
 
   ENTER;
 
+  fprintf(stderr, "--- BEGIN --- MOVE ---\n");
+
   src = op&0x3f;
   dst = MODESWAP((op&0xfc0)>>6);
   
@@ -73,8 +75,9 @@ static void move(struct cpu *cpu, WORD op)
     move_w(cpu, src, dst);
     break;
   }
-  if(!cpu->has_prefetched)
+  if(cpu->has_prefetched < 2)
     cpu_prefetch();
+  fprintf(stderr, "--- END --- MOVE ---\n");
 }
 
 static struct cprint *move_print(LONG addr, WORD op)

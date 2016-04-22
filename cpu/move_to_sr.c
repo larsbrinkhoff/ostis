@@ -7,6 +7,7 @@ static void move_to_sr(struct cpu *cpu, WORD op)
 {
   ENTER;
 
+  fprintf(stderr, "--- BEGIN --- MOVE to SR ---\n");
   if(cpu->sr&0x2000) {
     ADD_CYCLE(12);
     cpu_set_sr(ea_read_word(cpu, op&0x3f, 0));
@@ -14,6 +15,7 @@ static void move_to_sr(struct cpu *cpu, WORD op)
   } else {
     cpu_set_exception(8); /* Privilege violation */
   }
+  fprintf(stderr, "--- END --- MOVE to SR ---\n");
 }
 
 static struct cprint *move_to_sr_print(LONG addr, WORD op)

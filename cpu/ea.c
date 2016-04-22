@@ -88,11 +88,12 @@ static LONG ea_addr_101(struct cpu *cpu, int reg)
 {
   int o;
 
-  o = bus_read_word(cpu->pc);
+  cpu_prefetch();
+  o = fetch_instr(cpu);
   if(o&0x8000) o |= 0xffff0000;
 
-  if(!rmw) {
-    cpu->pc += 2;
+  if(rmw) {
+    cpu->pc -= 2;
   }
   return cpu->a[reg]+o;
 }
@@ -101,9 +102,10 @@ static LONG ea_addr_110(struct cpu *cpu, int reg)
 {
   int d,o,r,a,rs;
 
-  d = bus_read_word(cpu->pc);
-  if(!rmw) {
-    cpu->pc += 2;
+  cpu_prefetch();
+  d = fetch_instr(cpu);
+  if(rmw) {
+    cpu->pc -= 2;
   }
   a = d&0x8000;
   r = (d&0x7000)>>12;
@@ -129,8 +131,8 @@ static LONG ea_addr_111_pcxn(struct cpu *cpu)
 {
   int d,o,r,a,rs;
 
-  d = bus_read_word(cpu->pc);
-  cpu->pc += 2;
+  cpu_prefetch();
+  d = fetch_instr(cpu);
   a = d&0x8000;
   r = (d&0x7000)>>12;
   rs = (d&0x800);
@@ -158,24 +160,30 @@ static LONG ea_addr_111(struct cpu *cpu, int reg)
   switch(reg) {
   case 0:
     ADD_CYCLE_EA(8);
-    a = bus_read_word(cpu->pc);
+    cpu_prefetch();
+    a = fetch_instr(cpu);
     if(a&0x8000) a |= 0xffff0000;
-    if(!rmw) {
-      cpu->pc += 2;
+    if(rmw) {
+      cpu->pc -= 2;
     }
     return a;
   case 1:
     ADD_CYCLE_EA(12);
-    a = bus_read_long(cpu->pc);
+    cpu_prefetch();
+    a = (fetch_instr(cpu) << 16);
+    fprintf(stderr, "a = %08x\n", a);
+    cpu_prefetch();
+    a += fetch_instr(cpu);
+    fprintf(stderr, "a = %08x\n", a);
     if(!rmw) {
       cpu->pc += 4;
     }
     return a;
   case 2:
     ADD_CYCLE_EA(8);
-    a = bus_read_word(cpu->pc);
+    cpu_prefetch();
+    a = fetch_instr(cpu);
     if(a&0x8000) a |= 0xffff0000;
-    cpu->pc += 2;
     return a+cpu->pc-2;
   case 3:
     ADD_CYCLE_EA(10);
@@ -232,8 +240,8 @@ BYTE ea_read_byte(struct cpu *cpu, int mode, int noupdate)
   case 7:
     if((mode&0x7) == 4) {
       ADD_CYCLE_EA(4);
-      i = bus_read_word(cpu->pc)&0xff;
-      cpu->pc += 2;
+      cpu_prefetch();
+      i = fetch_instr(cpu)&0xff;
       rmw = 0;
       return i;
     } else {
@@ -291,8 +299,8 @@ WORD ea_read_word(struct cpu *cpu, int mode, int noupdate)
   case 7:
     if((mode&0x7) == 4) {
       ADD_CYCLE_EA(4);
-      i = bus_read_word(cpu->pc);
-      cpu->pc += 2;
+      cpu_prefetch();
+      i = fetch_instr(cpu);
       rmw = 0;
       return i;
     } else {
@@ -350,13 +358,16 @@ LONG ea_read_long(struct cpu *cpu, int mode, int noupdate)
   case 7:
     if((mode&0x7) == 4) {
       ADD_CYCLE_EA(8);
-      i = bus_read_long(cpu->pc);
-      cpu->pc += 4;
+      cpu_prefetch();
+      i = (fetch_instr(cpu) << 16);
+      cpu_prefetch();
+      i += fetch_instr(cpu);
       rmw = 0;
       return i;
     } else {
       ADD_CYCLE_EA(4);
       addr = ea_addr_111(cpu, mode&0x7);
+      fprintf(stderr, "addr = %08x\n", addr);
     }
     break;
   default:

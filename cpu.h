@@ -21,8 +21,9 @@ struct cpu {
   int stopped;
   int debug_halted;
   int instr_state;
-  WORD current_instr;
-  WORD prefetched_instr;
+  WORD current_instr; // IRD
+  WORD prefetched_instr; // IR
+  WORD prefetched_instr2; // IRC
   int has_prefetched;
   int ipl1, ipl2;
 
